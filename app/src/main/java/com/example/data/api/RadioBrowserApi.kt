@@ -14,17 +14,25 @@ interface RadioBrowserApi {
         @Query("language") language: String? = null,
         @Query("has_geo_info") hasGeoInfo: Boolean? = true,
         @Query("is_https") isHttps: Boolean? = null,
-        @Query("limit") limit: Int = 100,
+        @Query("limit") limit: Int = 500,
         @Query("order") order: String = "votes",
         @Query("reverse") reverse: Boolean = true,
         @Query("hidebroken") hideBroken: Boolean = true
     ): List<RadioStationDto>
 
-    @GET("json/stations/topvote/100")
-    suspend fun getTopVotedStations(): List<RadioStationDto>
+    @GET("json/stations/topvote/{limit}")
+    suspend fun getTopVotedStations(@retrofit2.http.Path("limit") limit: Int = 400): List<RadioStationDto>
 
-    @GET("json/stations/topclick/100")
-    suspend fun getTopClickedStations(): List<RadioStationDto>
+    @GET("json/stations/topclick/{limit}")
+    suspend fun getTopClickedStations(@retrofit2.http.Path("limit") limit: Int = 400): List<RadioStationDto>
+
+    @GET("json/stations/bycountrycodeexact/{code}")
+    suspend fun getStationsByCountryCode(
+        @retrofit2.http.Path("code") code: String,
+        @Query("limit") limit: Int = 200,
+        @Query("has_geo_info") hasGeoInfo: Boolean = true,
+        @Query("hidebroken") hideBroken: Boolean = true
+    ): List<RadioStationDto>
 
     @GET("json/countries")
     suspend fun getCountries(

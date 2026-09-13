@@ -114,30 +114,54 @@ class RadioRepository(private val database: AppDatabase) {
     }.flowOn(Dispatchers.IO)
 
     private suspend fun fetchApiStations(filter: FilterCriteria): List<RadioStation> {
-        val dtos = try {
-            api.searchStations(
+        val list = mutableListOf<RadioStation>()
+        try {
+            val mainResults = api.searchStations(
                 name = filter.query.ifBlank { null },
                 country = filter.country.ifBlank { null },
                 countryCode = filter.countryCode.ifBlank { null },
                 tag = filter.genre.ifBlank { null },
                 language = filter.language.ifBlank { null },
                 hasGeoInfo = true,
-                limit = 120,
+                limit = 500,
                 order = "votes"
-            )
+            ).map { it.toDomain() }.filter { it.latitude != null && it.longitude != null }
+            list.addAll(mainResults)
         } catch (e: Exception) {
-            fallbackApi.searchStations(
-                name = filter.query.ifBlank { null },
-                country = filter.country.ifBlank { null },
-                countryCode = filter.countryCode.ifBlank { null },
-                tag = filter.genre.ifBlank { null },
-                language = filter.language.ifBlank { null },
-                hasGeoInfo = true,
-                limit = 120,
-                order = "votes"
-            )
+            Log.w("RadioRepository", "Primary searchStations error: ${e.message}")
+            try {
+                val fallbackResults = fallbackApi.searchStations(
+                    name = filter.query.ifBlank { null },
+                    country = filter.country.ifBlank { null },
+                    countryCode = filter.countryCode.ifBlank { null },
+                    tag = filter.genre.ifBlank { null },
+                    language = filter.language.ifBlank { null },
+                    hasGeoInfo = true,
+                    limit = 300,
+                    order = "votes"
+                ).map { it.toDomain() }.filter { it.latitude != null && it.longitude != null }
+                list.addAll(fallbackResults)
+            } catch (_: Exception) {}
         }
-        return dtos.map { it.toDomain() }.filter { it.latitude != null && it.longitude != null }
+
+        // Enrich with top clicked and regional stations if global exploration
+        if (filter.query.isBlank() && filter.genre.isBlank() && filter.country.isBlank()) {
+            try {
+                val topClicked = api.getTopClickedStations(300)
+                    .map { it.toDomain() }
+                    .filter { it.latitude != null && it.longitude != null }
+                list.addAll(topClicked)
+            } catch (_: Exception) {}
+
+            try {
+                val trStations = api.getStationsByCountryCode("TR", limit = 150)
+                    .map { it.toDomain() }
+                    .filter { it.latitude != null && it.longitude != null }
+                list.addAll(trStations)
+            } catch (_: Exception) {}
+        }
+
+        return list.distinctBy { it.stationUuid }
     }
 
     suspend fun searchStations(query: String, filter: FilterCriteria = FilterCriteria()): List<RadioStation> = withContext(Dispatchers.IO) {

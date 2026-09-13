@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,7 +32,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
@@ -66,6 +69,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.globe.CameraTarget
 import com.example.globe.GlobeCanvas
+import com.example.globe.WorldMapView
 import com.example.model.FilterCriteria
 import com.example.model.PlaybackState
 import com.example.model.RadioStation
@@ -88,6 +92,7 @@ fun GlobeScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    var isFlatMapMode by remember { mutableStateOf(true) } // Default to 1:1 real world map
     var selectedStation by remember { mutableStateOf<RadioStation?>(null) }
     var selectedCluster by remember { mutableStateOf<StationCluster?>(null) }
     var cameraTarget by remember { mutableStateOf<CameraTarget?>(null) }
@@ -112,7 +117,7 @@ fun GlobeScreen(
                         cameraTarget = CameraTarget(
                             lat = loc.latitude,
                             lon = loc.longitude,
-                            radiusDp = 280f
+                            radiusDp = 350f
                         )
                     }
                 }
@@ -121,29 +126,52 @@ fun GlobeScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        // 1. Interactive 3D Globe
-        GlobeCanvas(
-            stations = stations,
-            selectedStation = selectedStation,
-            playingStation = playingStation,
-            cameraTarget = cameraTarget,
-            onStationSelected = { station ->
-                selectedStation = station
-                cameraTarget = CameraTarget(
-                    lat = station.latitude ?: 0.0,
-                    lon = station.longitude ?: 0.0
-                )
-            },
-            onClusterSelected = { cluster ->
-                selectedCluster = cluster
-                cameraTarget = CameraTarget(
-                    lat = cluster.centerLat,
-                    lon = cluster.centerLon
-                )
-            }
-        )
+        // 1. Interactive 1:1 Real World Map or 3D Globe
+        if (isFlatMapMode) {
+            WorldMapView(
+                stations = stations,
+                selectedStation = selectedStation,
+                playingStation = playingStation,
+                cameraTarget = cameraTarget,
+                onStationSelected = { station ->
+                    selectedStation = station
+                    cameraTarget = CameraTarget(
+                        lat = station.latitude ?: 0.0,
+                        lon = station.longitude ?: 0.0
+                    )
+                },
+                onClusterSelected = { cluster ->
+                    selectedCluster = cluster
+                    cameraTarget = CameraTarget(
+                        lat = cluster.centerLat,
+                        lon = cluster.centerLon
+                    )
+                }
+            )
+        } else {
+            GlobeCanvas(
+                stations = stations,
+                selectedStation = selectedStation,
+                playingStation = playingStation,
+                cameraTarget = cameraTarget,
+                onStationSelected = { station ->
+                    selectedStation = station
+                    cameraTarget = CameraTarget(
+                        lat = station.latitude ?: 0.0,
+                        lon = station.longitude ?: 0.0
+                    )
+                },
+                onClusterSelected = { cluster ->
+                    selectedCluster = cluster
+                    cameraTarget = CameraTarget(
+                        lat = cluster.centerLat,
+                        lon = cluster.centerLon
+                    )
+                }
+            )
+        }
 
-        // 2. Top Bar (Search + Filter + Quick Genre Indicators)
+        // 2. Top Bar (Search + View Switcher + Filter + Regions + Genre Legend)
         Column(
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -154,14 +182,14 @@ fun GlobeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(24.dp)),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.90f),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
                 tonalElevation = 6.dp,
                 shadowElevation = 8.dp
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onOpenSearch) {
@@ -173,16 +201,48 @@ fun GlobeScreen(
                     }
 
                     Text(
-                        text = if (filterCriteria.genre.isNotBlank()) "Genre: ${filterCriteria.genre}"
-                        else if (filterCriteria.country.isNotBlank()) "Country: ${filterCriteria.country}"
-                        else "Explore ${stations.size} World Stations...",
+                        text = if (filterCriteria.genre.isNotBlank()) "Tür: ${filterCriteria.genre}"
+                        else if (filterCriteria.country.isNotBlank()) "Ülke: ${filterCriteria.country}"
+                        else "${stations.size} Canlı Radyo Yayını",
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium
                         ),
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 6.dp)
                     )
+
+                    // Toggle Map/Globe Mode
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .clickable { isFlatMapMode = !isFlatMapMode }
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (isFlatMapMode) Icons.Default.Public else Icons.Default.Map,
+                                contentDescription = "Mod Değiştir",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (isFlatMapMode) "3B Küre" else "Harita",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(4.dp))
 
                     BadgedBox(
                         badge = {
@@ -208,6 +268,44 @@ fun GlobeScreen(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
+
+            // Quick Region Shortcuts
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                val regions = listOf(
+                    "🇹🇷 Türkiye" to (39.0 to 35.0),
+                    "🇪🇺 Avrupa" to (50.0 to 15.0),
+                    "🇺🇸 Amerika" to (38.0 to -98.0),
+                    "🌏 Asya" to (35.0 to 105.0),
+                    "🌍 Afrika" to (5.0 to 20.0),
+                    "🇦🇺 Okyanusya" to (-25.0 to 135.0)
+                )
+                regions.forEach { (label, coords) ->
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                        shadowElevation = 2.dp,
+                        modifier = Modifier.clip(CircleShape).clickable {
+                            cameraTarget = CameraTarget(lat = coords.first, lon = coords.second, radiusDp = 350f)
+                        }
+                    ) {
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            ),
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
 
             // Genre Color Legend bar
             Row(
@@ -243,13 +341,78 @@ fun GlobeScreen(
             }
         }
 
-        // 3. Floating Controls on Right Side (Zoom In, Zoom Out, My Location)
+        // 3. Floating Controls on Right Side (Zoom In, Zoom Out, Turkey Jump, View Mode, Location, Recenter)
         Column(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .padding(end = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+            // Zoom In
+            FloatingActionButton(
+                onClick = {
+                    val currentR = cameraTarget?.radiusDp ?: 250f
+                    cameraTarget = CameraTarget(
+                        lat = cameraTarget?.lat ?: 39.0,
+                        lon = cameraTarget?.lon ?: 35.0,
+                        radiusDp = (currentR * 1.4f).coerceIn(140f, 650f)
+                    )
+                },
+                modifier = Modifier.size(40.dp).testTag("zoom_in_button"),
+                shape = CircleShape,
+                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                elevation = FloatingActionButtonDefaults.elevation(4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Zoom In",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            // Zoom Out
+            FloatingActionButton(
+                onClick = {
+                    val currentR = cameraTarget?.radiusDp ?: 250f
+                    cameraTarget = CameraTarget(
+                        lat = cameraTarget?.lat ?: 39.0,
+                        lon = cameraTarget?.lon ?: 35.0,
+                        radiusDp = (currentR * 0.7f).coerceIn(140f, 650f)
+                    )
+                },
+                modifier = Modifier.size(40.dp).testTag("zoom_out_button"),
+                shape = CircleShape,
+                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                elevation = FloatingActionButtonDefaults.elevation(4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Remove,
+                    contentDescription = "Zoom Out",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            // Quick Turkey focus
+            FloatingActionButton(
+                onClick = {
+                    cameraTarget = CameraTarget(lat = 39.0, lon = 35.0, radiusDp = 380f)
+                },
+                modifier = Modifier.size(40.dp).testTag("turkey_focus_button"),
+                shape = CircleShape,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                elevation = FloatingActionButtonDefaults.elevation(4.dp)
+            ) {
+                Text(
+                    text = "TR",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                )
+            }
+
             // My Location
             FloatingActionButton(
                 onClick = {
@@ -266,7 +429,7 @@ fun GlobeScreen(
                                     cameraTarget = CameraTarget(
                                         lat = loc.latitude,
                                         lon = loc.longitude,
-                                        radiusDp = 320f
+                                        radiusDp = 350f
                                     )
                                 }
                             }
@@ -275,7 +438,7 @@ fun GlobeScreen(
                         locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                     }
                 },
-                modifier = Modifier.size(44.dp).testTag("my_location_button"),
+                modifier = Modifier.size(40.dp).testTag("my_location_button"),
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
                 elevation = FloatingActionButtonDefaults.elevation(4.dp)
@@ -288,21 +451,21 @@ fun GlobeScreen(
                 )
             }
 
-            // Recenter Globe
+            // Recenter Globe / Map
             FloatingActionButton(
                 onClick = {
                     cameraTarget = CameraTarget(lat = 30.0, lon = 20.0, radiusDp = 180f)
                 },
-                modifier = Modifier.size(44.dp).testTag("recenter_globe_button"),
+                modifier = Modifier.size(40.dp).testTag("recenter_globe_button"),
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
                 elevation = FloatingActionButtonDefaults.elevation(4.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Public,
-                    contentDescription = "Recenter Globe",
+                    imageVector = Icons.Default.NearMe,
+                    contentDescription = "Recenter",
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }

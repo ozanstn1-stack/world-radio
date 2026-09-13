@@ -153,13 +153,15 @@ fun GlobeCanvas(
                 .fillMaxSize()
                 .pointerInput(Unit) {
                     detectTransformGestures { _, pan, zoom, _ ->
-                        val sensitivity = 120f / currentRadiusPx
+                        // Calibrated, smooth finger tracking (reduced from 120f to 32f for controllable, realistic feel)
+                        val sensitivity = 32f / currentRadiusPx
                         val newLat = (camLat + pan.y * sensitivity).coerceIn(-82f, 82f)
                         val newLon = (camLon - pan.x * sensitivity) % 360f
 
                         camLat = newLat
                         camLon = newLon
-                        globeRadiusDp = (globeRadiusDp * zoom).coerceIn(130f, 650f)
+                        val zoomDamped = 1f + (zoom - 1f) * 0.65f
+                        globeRadiusDp = (globeRadiusDp * zoomDamped).coerceIn(130f, 650f)
 
                         coroutineScope.launch {
                             animCamLat.snapTo(camLat)
@@ -402,23 +404,27 @@ private fun DrawScope.drawContinents(
     camLat: Double,
     camLon: Double
 ) {
-    val landFillColor = Color(0xFF1E3A5F)
-    val coastColor = Color(0xFF539BD8).copy(alpha = 0.75f)
+    val landFillColor = Color(0xFF1B3556)
+    val coastColor = Color(0xFF38BDF8).copy(alpha = 0.85f)
+    val islandColor = Color(0xFF4FC3F7).copy(alpha = 0.90f)
 
     for (continent in WorldContinentData.continents) {
         val path = Path()
         var started = false
         var anyVisible = false
+        var firstPt: Offset? = null
 
         for ((lat, lon) in continent.points) {
             val p = GlobeMath.project(lat, lon, camLat, camLon, cx, cy, radius)
             if (p.isVisible && p.depth > 0) {
                 anyVisible = true
+                val pt = Offset(p.screenX, p.screenY)
                 if (!started) {
-                    path.moveTo(p.screenX, p.screenY)
+                    path.moveTo(pt.x, pt.y)
+                    firstPt = pt
                     started = true
                 } else {
-                    path.lineTo(p.screenX, p.screenY)
+                    path.lineTo(pt.x, pt.y)
                 }
             } else {
                 started = false
@@ -426,10 +432,20 @@ private fun DrawScope.drawContinents(
         }
 
         if (anyVisible) {
+            if (firstPt != null) {
+                path.close()
+            }
             // Draw land fill
             drawPath(path = path, color = landFillColor, style = Fill)
             // Draw glowing coastline
-            drawPath(path = path, color = coastColor, style = Stroke(width = 1.4f, cap = StrokeCap.Round))
+            drawPath(
+                path = path,
+                color = if (continent.isBorderOrIsland) islandColor else coastColor,
+                style = Stroke(
+                    width = if (continent.name.contains("Turkey")) 2.2f else 1.4f,
+                    cap = StrokeCap.Round
+                )
+            )
         }
     }
 }
