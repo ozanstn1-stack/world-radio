@@ -38,11 +38,17 @@ interface FavoriteDao {
 
 @Dao
 interface RecentDao {
-    @Query("SELECT * FROM recent_stations ORDER BY playedAt DESC LIMIT 50")
+    @Query("SELECT * FROM recent_stations ORDER BY playedAt DESC LIMIT 20")
     fun getRecentStations(): Flow<List<RecentEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRecent(recent: RecentEntity)
+
+    @Query("DELETE FROM recent_stations WHERE stationUuid NOT IN (SELECT stationUuid FROM recent_stations ORDER BY playedAt DESC LIMIT 20)")
+    suspend fun trimToLimit()
+
+    @Query("DELETE FROM recent_stations WHERE stationUuid = :stationUuid")
+    suspend fun deleteRecent(stationUuid: String)
 
     @Query("DELETE FROM recent_stations")
     suspend fun clearAll()

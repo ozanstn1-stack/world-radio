@@ -171,6 +171,7 @@ fun RadioApp(
                     SearchScreen(
                         playbackState = playbackState,
                         favorites = favorites,
+                        recents = recents,
                         onSearch = { query, criteria ->
                             repository.searchStations(query, criteria)
                         },
@@ -178,7 +179,8 @@ fun RadioApp(
                         onToggleFavorite = { station ->
                             coroutineScope.launch { repository.toggleFavorite(station) }
                         },
-                        onOpenFilter = { isFilterOpen = true }
+                        onOpenFilter = { isFilterOpen = true },
+                        onSeeAllRecents = { currentTab = NavigationTab.RECENT }
                     )
                 }
                 NavigationTab.FAVORITES -> {

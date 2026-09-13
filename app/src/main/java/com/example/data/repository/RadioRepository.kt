@@ -61,6 +61,7 @@ class RadioRepository(private val database: AppDatabase) {
 
     suspend fun recordPlayedStation(station: RadioStation) = withContext(Dispatchers.IO) {
         recentDao.insertRecent(RecentEntity.fromDomain(station))
+        recentDao.trimToLimit()
     }
 
     suspend fun clearRecentStations() = withContext(Dispatchers.IO) {

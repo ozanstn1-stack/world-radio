@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import com.example.model.FilterCriteria
 import com.example.model.PlaybackState
 import com.example.model.RadioStation
+import com.example.ui.components.RecentlyPlayedSection
 import com.example.ui.components.StationGridCard
 import kotlinx.coroutines.delay
 
@@ -51,10 +52,12 @@ import kotlinx.coroutines.delay
 fun SearchScreen(
     playbackState: PlaybackState,
     favorites: List<RadioStation>,
+    recents: List<RadioStation> = emptyList(),
     onSearch: suspend (String, FilterCriteria) -> List<RadioStation>,
     onPlayStation: (RadioStation) -> Unit,
     onToggleFavorite: (RadioStation) -> Unit,
     onOpenFilter: () -> Unit,
+    onSeeAllRecents: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var query by remember { mutableStateOf("") }
@@ -117,6 +120,17 @@ fun SearchScreen(
         )
 
         Spacer(modifier = Modifier.height(12.dp))
+
+        // Recently Played horizontal quick-play section when no search query is active
+        if (query.isBlank() && selectedGenreChip.isBlank() && recents.isNotEmpty()) {
+            RecentlyPlayedSection(
+                recents = recents,
+                playbackState = playbackState,
+                onPlayStation = onPlayStation,
+                onSeeAllClick = onSeeAllRecents
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+        }
 
         // Quick Genre Chips
         Row(
