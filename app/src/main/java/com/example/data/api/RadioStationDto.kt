@@ -2,9 +2,7 @@ package com.example.data.api
 
 import com.example.model.RadioStation
 import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
 
-@JsonClass(generateAdapter = true)
 data class RadioStationDto(
     @Json(name = "stationuuid") val stationuuid: String,
     @Json(name = "name") val name: String?,
@@ -49,7 +47,6 @@ data class RadioStationDto(
     }
 }
 
-@JsonClass(generateAdapter = true)
 data class CountryDto(
     @Json(name = "name") val name: String,
     @Json(name = "iso_3166_1") val isoCode: String?,

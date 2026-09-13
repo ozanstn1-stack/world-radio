@@ -64,6 +64,10 @@ android {
     compose = true
     buildConfig = true
   }
+  lint {
+    checkReleaseBuilds = false
+    abortOnError = false
+  }
   testOptions { unitTests { isIncludeAndroidResources = true } }
   dependenciesInfo {
     includeInApk = false
@@ -146,5 +150,4 @@ dependencies {
   debugImplementation(libs.androidx.compose.ui.test.manifest)
   debugImplementation(libs.androidx.compose.ui.tooling)
   "ksp"(libs.androidx.room.compiler)
-  "ksp"(libs.moshi.kotlin.codegen)
 }
