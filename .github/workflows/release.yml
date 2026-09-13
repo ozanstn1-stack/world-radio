@@ -104,13 +104,13 @@ jobs:
         env:
           GRADLE_OPTS: "-Djava.awt.headless=true -Dorg.gradle.configuration-cache=false"
           JAVA_OPTS: "-Djava.awt.headless=true"
-        run: ./gradlew assembleRelease --no-configuration-cache --stacktrace
+        run: ./gradlew assembleRelease -Dksp.useKSP2=true -Djava.awt.headless=true -Dorg.gradle.jvmargs="-Xmx4g -Dfile.encoding=UTF-8 -Djava.awt.headless=true" --no-configuration-cache --stacktrace
 
       - name: Build Debug APK (Optional Testing Asset)
         env:
           GRADLE_OPTS: "-Djava.awt.headless=true -Dorg.gradle.configuration-cache=false"
           JAVA_OPTS: "-Djava.awt.headless=true"
-        run: ./gradlew assembleDebug --no-configuration-cache --stacktrace
+        run: ./gradlew assembleDebug -Dksp.useKSP2=true -Djava.awt.headless=true -Dorg.gradle.jvmargs="-Xmx4g -Dfile.encoding=UTF-8 -Djava.awt.headless=true" --no-configuration-cache --stacktrace
 
       - name: Prepare APK Assets for Release
         id: prepare_assets
