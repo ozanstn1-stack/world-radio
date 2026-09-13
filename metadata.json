@@ -1,0 +1,6 @@
+{
+  "name": "World Radio Globe",
+  "description": "Discover and listen to live radio stations worldwide on an interactive 3D globe with search, filters, favorites, and background playback.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

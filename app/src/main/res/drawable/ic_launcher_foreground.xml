@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Globe outline circle -->
+    <path
+        android:pathData="M54,54m-26,0a26,26 0 1,0 52,0a26,26 0 1,0 -52,0"
+        android:strokeWidth="2.5"
+        android:strokeColor="#00E5FF"
+        android:fillColor="#10254C" />
+
+    <!-- Equator and parallels -->
+    <path
+        android:pathData="M28.5,54h51"
+        android:strokeWidth="1.8"
+        android:strokeColor="#38BDF8" />
+    <path
+        android:pathData="M33,42c6,3 36,3 42,0"
+        android:strokeWidth="1.5"
+        android:strokeColor="#0284C7" />
+    <path
+        android:pathData="M33,66c6,-3 36,-3 42,0"
+        android:strokeWidth="1.5"
+        android:strokeColor="#0284C7" />
+
+    <!-- Central meridian ellipse -->
+    <path
+        android:pathData="M54,28c-10,7 -10,45 0,52"
+        android:strokeWidth="1.8"
+        android:strokeColor="#38BDF8" />
+    <path
+        android:pathData="M54,28c10,7 10,45 0,52"
+        android:strokeWidth="1.8"
+        android:strokeColor="#38BDF8" />
+
+    <!-- Broadcast Radio Waves -->
+    <path
+        android:pathData="M65,34c4,-4 10,-4 14,0"
+        android:strokeWidth="2.5"
+        android:strokeColor="#F43F5E"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M68,28c7,-7 18,-7 25,0"
+        android:strokeWidth="2.5"
+        android:strokeColor="#FB7185"
+        android:strokeLineCap="round" />
+
+    <!-- Center Radio Antenna Beacon Pin -->
+    <path
+        android:pathData="M54,54m-4.5,0a4.5,4.5 0 1,0 9,0a4.5,4.5 0 1,0 -9,0"
+        android:fillColor="#F43F5E" />
+    <path
+        android:pathData="M54,54m-2,0a2,2 0 1,0 4,0a2,2 0 1,0 -4,0"
+        android:fillColor="#FFFFFF" />
+</vector>
+
