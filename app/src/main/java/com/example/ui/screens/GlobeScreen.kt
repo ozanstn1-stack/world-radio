@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.globe.CameraTarget
 import com.example.globe.GlobeCanvas
+import com.example.globe.GoogleMapView
 import com.example.globe.WorldMapView
 import com.example.model.FilterCriteria
 import com.example.model.PlaybackState
@@ -126,9 +127,9 @@ fun GlobeScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        // 1. Interactive 1:1 Real World Map or 3D Globe
+        // 1. Interactive 1:1 Google Maps or 3D Globe
         if (isFlatMapMode) {
-            WorldMapView(
+            GoogleMapView(
                 stations = stations,
                 selectedStation = selectedStation,
                 playingStation = playingStation,
@@ -140,13 +141,7 @@ fun GlobeScreen(
                         lon = station.longitude ?: 0.0
                     )
                 },
-                onClusterSelected = { cluster ->
-                    selectedCluster = cluster
-                    cameraTarget = CameraTarget(
-                        lat = cluster.centerLat,
-                        lon = cluster.centerLon
-                    )
-                }
+                onPlayStation = onPlayStation
             )
         } else {
             GlobeCanvas(
@@ -233,7 +228,7 @@ fun GlobeScreen(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = if (isFlatMapMode) "3B Küre" else "Harita",
+                                text = if (isFlatMapMode) "3B Küre" else "Google Maps",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold
